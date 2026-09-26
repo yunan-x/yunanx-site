@@ -1,30 +1,30 @@
 # yunanx.com
 
-Static mirror of the portfolio site, hosted on Vercel. `site/` is what gets deployed.
+Portfolio site: Next.js + Payload CMS on Vercel, Neon Postgres, Vercel Blob for uploads.
+The design is the original Webflow build; its CSS lives in `src/app/(frontend)/site.css`.
 
 ## Layout
 
-- `site/` — deployable static tree. Pages live at `<path>/index.html`, assets under `site/assets/`.
-- `scripts/scrape.mjs` — pulls every page and asset from the live Webflow site into `site/`.
-- `scripts/postprocess.mjs` — detaches the tree from Webflow (drops SRI hashes and preconnect, points the contact form at Formspree, writes `404.html`, `sitemap.xml`, `robots.txt`).
-- `vercel.json` — clean URLs, no trailing slash, long cache on `/assets`.
+- `src/payload.config.ts` — collections (Projects, Work archive, Media, Users), globals (Home, About, Contact, Site settings), SEO + redirects plugins.
+- `src/blocks/` — the Section / content blocks that project pages are built from.
+- `src/app/(frontend)/` — public routes. `src/app/(payload)/` is Payload's generated admin; don't hand-edit it.
+- `src/migrations/` — database schema. `push` is off, so every schema change needs `npm run migrate:create`.
+- `scripts/seed/` — one-off import of the Webflow mirror in `site/` (kept until the CMS content is signed off).
+- `public/assets/` — fonts, CSS backgrounds and decorative icons referenced by the stylesheet.
 
-## Rebuild from the live Webflow site
-
-Only needed while Webflow is still the source of truth. After the domain moves, edit `site/` directly.
-
-```bash
-npm run scrape
-```
-
-## Preview
+## Local development
 
 ```bash
-npm run dev
+npx vercel env pull .env   # DATABASE_URL, DATABASE_URL_UNPOOLED, BLOB_READ_WRITE_TOKEN
+npm install
+npm run migrate
+npm run dev                # http://localhost:3000, admin at /admin
 ```
 
-Serves `site/` on http://localhost:4173.
+Without `BLOB_READ_WRITE_TOKEN` uploads go to `./media` on disk.
 
-## Contact form
+## Deploy
 
-The forms on `/contact` and `/about` post to Formspree (form id in `scripts/postprocess.mjs`; override with `FORMSPREE_ID` when rebuilding).
+Vercel builds with `npm run build`, which runs pending migrations first. Environment
+variables come from the Neon and Blob stores connected to the project, plus
+`PAYLOAD_SECRET` and `NEXT_PUBLIC_SERVER_URL`.
