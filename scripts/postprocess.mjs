@@ -4,7 +4,7 @@ import { join } from 'node:path';
 
 const SITE = new URL('../site/', import.meta.url).pathname;
 const DOMAIN = 'https://yunanx.com';
-const FORMSPREE = process.env.FORMSPREE_ID || 'YOUR_FORMSPREE_ID';
+const FORMSPREE = process.env.FORMSPREE_ID || 'mljdwkjn';
 
 async function* htmlFiles(dir) {
   for (const e of await readdir(dir, { withFileTypes: true })) {

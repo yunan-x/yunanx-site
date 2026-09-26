@@ -14,7 +14,7 @@ Static mirror of the portfolio site, hosted on Vercel. `site/` is what gets depl
 Only needed while Webflow is still the source of truth. After the domain moves, edit `site/` directly.
 
 ```bash
-FORMSPREE_ID=<your id> npm run scrape
+npm run scrape
 ```
 
 ## Preview
@@ -27,4 +27,4 @@ Serves `site/` on http://localhost:4173.
 
 ## Contact form
 
-`site/contact/index.html` posts to `https://formspree.io/f/<FORMSPREE_ID>`. Replace the placeholder id there (or rerun the scrape with `FORMSPREE_ID` set).
+The forms on `/contact` and `/about` post to Formspree (form id in `scripts/postprocess.mjs`; override with `FORMSPREE_ID` when rebuilding).
