@@ -1,0 +1,3 @@
+User-agent: *
+Allow: /
+Sitemap: https://yunanx.com/sitemap.xml

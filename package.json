@@ -1,0 +1,9 @@
+{
+  "name": "yunanx-site",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "scrape": "node scripts/scrape.mjs && node scripts/postprocess.mjs",
+    "dev": "npx serve -l 4173 site"
+  }
+}
