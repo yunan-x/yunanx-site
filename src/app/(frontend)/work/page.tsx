@@ -13,6 +13,7 @@ export default async function WorkPage() {
       <section className="section">
         <div className="contain">
           <div className="wrap">
+            <h1 className="sr-only">Work</h1>
             <div className="w-layout-grid grid_3">
               {projects.map((p) => (
                 <ListCard key={p.id} project={p} />

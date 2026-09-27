@@ -372,6 +372,7 @@ async function seedProjects(): Promise<Record<string, number>> {
       cardImage: await media(imgSrc(homeCard?.querySelector('img') ?? card.querySelector('img')), title),
       listImage: await media(imgSrc(card.querySelector('img')), title),
       greyCard: Boolean(homeCard?.querySelector('.img_case_grey')),
+      cardBottomAlign: Boolean(homeCard?.classList.contains('bottom_align')),
       _status: 'published',
     })
     ids[slug] = created.id

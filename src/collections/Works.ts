@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { anyone, isAuthenticated } from '@/access'
+import { isAuthenticated, publishedOrAuthenticated } from '@/access'
 import { imageField, slugField } from '@/fields'
 
 // The "Old & New Archive" folders: /work/<slug>. One shared template.
@@ -7,7 +7,7 @@ export const Works: CollectionConfig = {
   slug: 'works',
   labels: { singular: 'Work', plural: 'Work archive' },
   admin: { useAsTitle: 'title', group: 'Content', defaultColumns: ['title', 'year', 'category', 'updatedAt'] },
-  access: { read: anyone, create: isAuthenticated, update: isAuthenticated, delete: isAuthenticated },
+  access: { read: publishedOrAuthenticated, create: isAuthenticated, update: isAuthenticated, delete: isAuthenticated },
   versions: { drafts: true },
   defaultSort: 'order',
   fields: [

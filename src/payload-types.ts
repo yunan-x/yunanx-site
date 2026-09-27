@@ -71,7 +71,6 @@ export interface Config {
     media: Media;
     projects: Project;
     works: Work;
-    redirects: Redirect;
     'payload-kv': PayloadKv;
     'payload-locked-documents': PayloadLockedDocument;
     'payload-preferences': PayloadPreference;
@@ -83,7 +82,6 @@ export interface Config {
     media: MediaSelect<false> | MediaSelect<true>;
     projects: ProjectsSelect<false> | ProjectsSelect<true>;
     works: WorksSelect<false> | WorksSelect<true>;
-    redirects: RedirectsSelect<false> | RedirectsSelect<true>;
     'payload-kv': PayloadKvSelect<false> | PayloadKvSelect<true>;
     'payload-locked-documents': PayloadLockedDocumentsSelect<false> | PayloadLockedDocumentsSelect<true>;
     'payload-preferences': PayloadPreferencesSelect<false> | PayloadPreferencesSelect<true>;
@@ -430,6 +428,10 @@ export interface Project {
    * Image is blended into the grey background until hovered.
    */
   greyCard?: boolean | null;
+  /**
+   * For tall images such as phone screens.
+   */
+  cardBottomAlign?: boolean | null;
   meta?: {
     title?: string | null;
     description?: string | null;
@@ -507,29 +509,6 @@ export interface Work {
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects".
- */
-export interface Redirect {
-  id: number;
-  from: string;
-  to?: {
-    type?: ('reference' | 'custom') | null;
-    reference?:
-      | ({
-          relationTo: 'projects';
-          value: number | Project;
-        } | null)
-      | ({
-          relationTo: 'works';
-          value: number | Work;
-        } | null);
-    url?: string | null;
-  };
-  updatedAt: string;
-  createdAt: string;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
  * via the `definition` "payload-kv".
  */
 export interface PayloadKv {
@@ -567,10 +546,6 @@ export interface PayloadLockedDocument {
     | ({
         relationTo: 'works';
         value: number | Work;
-      } | null)
-    | ({
-        relationTo: 'redirects';
-        value: number | Redirect;
       } | null);
   globalSlug?: string | null;
   user: {
@@ -852,6 +827,7 @@ export interface ProjectsSelect<T extends boolean = true> {
   cardImage?: T;
   listImage?: T;
   greyCard?: T;
+  cardBottomAlign?: T;
   meta?:
     | T
     | {
@@ -891,22 +867,6 @@ export interface WorksSelect<T extends boolean = true> {
   updatedAt?: T;
   createdAt?: T;
   _status?: T;
-}
-/**
- * This interface was referenced by `Config`'s JSON-Schema
- * via the `definition` "redirects_select".
- */
-export interface RedirectsSelect<T extends boolean = true> {
-  from?: T;
-  to?:
-    | T
-    | {
-        type?: T;
-        reference?: T;
-        url?: T;
-      };
-  updatedAt?: T;
-  createdAt?: T;
 }
 /**
  * This interface was referenced by `Config`'s JSON-Schema

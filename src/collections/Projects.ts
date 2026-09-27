@@ -1,5 +1,5 @@
 import type { CollectionConfig } from 'payload'
-import { anyone, isAuthenticated } from '@/access'
+import { isAuthenticated, publishedOrAuthenticated } from '@/access'
 import { Section } from '@/blocks'
 import { imageField, slugField, videoGroup } from '@/fields'
 
@@ -7,7 +7,7 @@ import { imageField, slugField, videoGroup } from '@/fields'
 export const Projects: CollectionConfig = {
   slug: 'projects',
   admin: { useAsTitle: 'title', group: 'Content', defaultColumns: ['title', 'subtitle', 'updatedAt'] },
-  access: { read: anyone, create: isAuthenticated, update: isAuthenticated, delete: isAuthenticated },
+  access: { read: publishedOrAuthenticated, create: isAuthenticated, update: isAuthenticated, delete: isAuthenticated },
   versions: { drafts: true },
   defaultSort: 'order',
   fields: [
@@ -64,6 +64,7 @@ export const Projects: CollectionConfig = {
             imageField('cardImage', { required: true, admin: { description: 'Home page and "Case studies" footer.' } }),
             imageField('listImage', { admin: { description: 'Work page. Falls back to the card image.' } }),
             { name: 'greyCard', type: 'checkbox', label: 'Grey card (art direction section)', admin: { description: 'Image is blended into the grey background until hovered.' } },
+            { name: 'cardBottomAlign', type: 'checkbox', label: 'Align the card image to the bottom', admin: { description: 'For tall images such as phone screens.' } },
           ],
         },
       ],

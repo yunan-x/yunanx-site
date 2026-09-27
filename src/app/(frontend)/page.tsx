@@ -30,8 +30,8 @@ function CasePair({ projects, grey }: { projects: Project[]; grey?: boolean }) {
   return (
     <div className={grey ? 'col_70' : 'col_80'}>
       <div className="w-layout-layout stack wf-layout-layout">
-        {projects.map((p, i) => (
-          <CaseCard key={p.id} project={p} grey={grey} bottomAlign={!grey && i === 0 && projects.length === 2 && p.slug === 'privasea'} />
+        {projects.map((p) => (
+          <CaseCard key={p.id} project={p} grey={grey} />
         ))}
       </div>
     </div>

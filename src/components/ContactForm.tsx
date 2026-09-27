@@ -3,7 +3,8 @@
 import { useState } from 'react'
 import type { Contact } from '@/payload-types'
 
-export function ContactForm({ contact }: { contact: Contact }) {
+export function ContactForm({ contact, headingLevel = 'h1' }: { contact: Contact; headingLevel?: 'h1' | 'h2' }) {
+  const Heading = headingLevel
   const [state, setState] = useState<'idle' | 'sending' | 'done' | 'fail'>('idle')
 
   async function onSubmit(e: React.FormEvent<HTMLFormElement>) {
@@ -23,13 +24,16 @@ export function ContactForm({ contact }: { contact: Contact }) {
         <div className="wrap">
           <div className="w-layout-vflex aligne_center_center">
             <div className="w-layout-vflex form_wrap">
-              <h1>{contact.heading}</h1>
+              <Heading className={headingLevel === 'h2' ? 'h1' : undefined}>{contact.heading}</Heading>
               {contact.subheading && <p>{contact.subheading}</p>}
               <div className="form-block w-form">
                 {state !== 'done' && (
                   <form className="form" onSubmit={onSubmit}>
+                    <label htmlFor="Name" className="sr-only">Name</label>
                     <input className="contact_form_txt w-input" maxLength={256} name="Name" placeholder="Name" type="text" id="Name" required />
+                    <label htmlFor="Email" className="sr-only">Email</label>
                     <input className="contact_form_txt w-input" maxLength={256} name="Email" placeholder="Email" type="email" id="Email" required />
+                    <label htmlFor="Message" className="sr-only">Message</label>
                     <input className="contact_form_txt w-input" maxLength={256} name="Message" placeholder="Drop me a message" type="text" id="Message" required />
                     <input type="submit" className="button w-button" value={state === 'sending' ? 'Please wait...' : 'Submit'} disabled={state === 'sending'} />
                   </form>

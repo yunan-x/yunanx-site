@@ -49,7 +49,7 @@ export default async function AboutPage() {
           </div>
         </div>
       </section>
-      {about.showContactForm && <ContactForm contact={contact} />}
+      {about.showContactForm && <ContactForm contact={contact} headingLevel="h2" />}
     </>
   )
 }

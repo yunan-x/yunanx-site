@@ -6,10 +6,10 @@ export const asDocs = <T,>(list: (T | number)[] | null | undefined): T[] =>
   (list ?? []).filter((d): d is T => typeof d === 'object' && d !== null)
 
 /** Home-page case card: image, name, category. */
-export function CaseCard({ project, grey, bottomAlign }: { project: Project; grey?: boolean; bottomAlign?: boolean }) {
+export function CaseCard({ project, grey }: { project: Project; grey?: boolean }) {
   return (
     <div className="w-layout-cell case_cell">
-      <Link href={`/projects/${project.slug}`} className={`case_wrap${bottomAlign ? ' bottom_align' : ''} w-inline-block`} aria-label={project.title}>
+      <Link href={`/projects/${project.slug}`} className={`case_wrap${project.cardBottomAlign ? ' bottom_align' : ''} w-inline-block`} aria-label={project.title}>
         <Img media={project.cardImage} className={grey ? 'img_case_grey' : 'img_case'} sizes="(max-width: 767px) 100vw, 526px" />
       </Link>
       <div className="w-layout-hflex flex_spac">
@@ -81,7 +81,7 @@ export function WorkFolders({ works, heading, marquee, small }: { works: Work[];
                 <h2 className="jubo" aria-hidden="true">{heading}</h2>
               </>
             ) : small ? (
-              <h3>{heading}</h3>
+              <h2 className="h3">{heading}</h2>
             ) : (
               <h2>{heading}</h2>
             )}

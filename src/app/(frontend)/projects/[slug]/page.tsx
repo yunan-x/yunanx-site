@@ -18,7 +18,7 @@ export async function generateStaticParams() {
 
 export async function generateMetadata({ params }: Props): Promise<Metadata> {
   const { slug } = await params
-  const project = await findBySlug('projects', slug, 0)
+  const project = await findBySlug('projects', slug, 1)
   if (!project) return {}
   return seoMetadata(project.meta, project.title, `/projects/${slug}`)
 }

@@ -13,14 +13,12 @@
     "migrate": "cross-env NODE_OPTIONS=--no-deprecation node scripts/with-unpooled.mjs payload migrate",
     "migrate:create": "cross-env NODE_OPTIONS=--no-deprecation node scripts/with-unpooled.mjs payload migrate:create",
     "migrate:status": "cross-env NODE_OPTIONS=--no-deprecation node scripts/with-unpooled.mjs payload migrate:status",
-    "seed": "node --env-file=.env --import tsx scripts/seed/index.ts",
-    "scrape": "node scripts/scrape.mjs && node scripts/postprocess.mjs"
+    "seed": "node --env-file=.env --import tsx scripts/seed/index.ts"
   },
   "dependencies": {
     "@payloadcms/db-postgres": "3.88.0",
     "@payloadcms/email-resend": "^3.88.0",
     "@payloadcms/next": "3.88.0",
-    "@payloadcms/plugin-redirects": "3.88.0",
     "@payloadcms/plugin-seo": "3.88.0",
     "@payloadcms/richtext-lexical": "3.88.0",
     "@payloadcms/storage-vercel-blob": "3.88.0",

@@ -1,6 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
 import { resendAdapter } from '@payloadcms/email-resend'
-import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
 import { vercelBlobStorage } from '@payloadcms/storage-vercel-blob'
@@ -37,7 +36,7 @@ const email = process.env.RESEND_API_KEY
   : undefined
 
 // The admin is used on the Vercel URL as well as the real domain.
-const origins = ['https://yunanx.com', 'https://www.yunanx.com', 'https://yunanx-site.vercel.app', 'http://localhost:3000']
+const origins = ['https://yunanx.com', 'https://www.yunanx.com', 'https://yunanx-site.vercel.app', ...(process.env.NODE_ENV === 'development' ? ['http://localhost:3000'] : [])]
 
 export default buildConfig({
   email,
@@ -78,6 +77,5 @@ export default buildConfig({
       generateURL: ({ doc, collectionSlug }) =>
         `${serverURL}${routeBase[collectionSlug as keyof typeof routeBase] ?? ''}/${doc?.slug ?? ''}`,
     }),
-    redirectsPlugin({ collections: ['projects', 'works'], overrides: { admin: { group: 'Settings' } } }),
   ],
 })
