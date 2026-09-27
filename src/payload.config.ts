@@ -36,9 +36,14 @@ const email = process.env.RESEND_API_KEY
   ? resendAdapter({ apiKey: process.env.RESEND_API_KEY, defaultFromAddress: process.env.EMAIL_FROM ?? 'onboarding@resend.dev', defaultFromName: 'Yunan CMS' })
   : undefined
 
+// The admin is used on the Vercel URL as well as the real domain.
+const origins = ['https://yunanx.com', 'https://www.yunanx.com', 'https://yunanx-site.vercel.app', 'http://localhost:3000']
+
 export default buildConfig({
   email,
   serverURL,
+  cors: origins,
+  csrf: origins,
   admin: {
     user: Users.slug,
     importMap: { baseDir: path.resolve(dirname) },
