@@ -9,7 +9,7 @@ export const asDocs = <T,>(list: (T | number)[] | null | undefined): T[] =>
 export function CaseCard({ project, grey, bottomAlign }: { project: Project; grey?: boolean; bottomAlign?: boolean }) {
   return (
     <div className="w-layout-cell case_cell">
-      <Link href={`/projects/${project.slug}`} className={`case_wrap${bottomAlign ? ' bottom_align' : ''} w-inline-block`}>
+      <Link href={`/projects/${project.slug}`} className={`case_wrap${bottomAlign ? ' bottom_align' : ''} w-inline-block`} aria-label={project.title}>
         <Img media={project.cardImage} className={grey ? 'img_case_grey' : 'img_case'} sizes="(max-width: 767px) 100vw, 526px" />
       </Link>
       <div className="w-layout-hflex flex_spac">
@@ -25,7 +25,7 @@ export function CaseCard({ project, grey, bottomAlign }: { project: Project; gre
 export function ListCard({ project }: { project: Project }) {
   return (
     <div className="w-layout-vflex case_cell">
-      <Link href={`/projects/${project.slug}`} className="case_wrap w-inline-block">
+      <Link href={`/projects/${project.slug}`} className="case_wrap w-inline-block" aria-label={project.title}>
         <Img media={project.listImage ?? project.cardImage} className="img_case" sizes="(max-width: 767px) 100vw, 526px" />
       </Link>
       <div className="w-layout-hflex flex_spac">
@@ -47,12 +47,12 @@ export function CaseStudies({ projects, current }: { projects: Project[]; curren
         <div className="w-layout-vflex wrap gap_m">
           <div className="w-layout-hflex aligne_center_center gap_s">
             <img src="/assets/6924abf1e391624479f3243c/6946e94bd1a011b132339240_flower.avif" loading="lazy" alt="" className="icon_48" />
-            <h3 className="p_100">Case studies</h3>
+            <h2 className="p_100">Case studies</h2>
           </div>
           <div className="w-layout-grid grid_case">
             {projects.map((p, i) => (
               <div key={p.id} className={`w-layout-vflex case_cell${SMALL_SLOTS[i % SMALL_SLOTS.length] ? ' small' : ''}`}>
-                <Link href={`/projects/${p.slug}`} className={`case_wrap small w-inline-block${p.slug === current ? ' w--current' : ''}`} aria-current={p.slug === current ? 'page' : undefined}>
+                <Link href={`/projects/${p.slug}`} className={`case_wrap small w-inline-block${p.slug === current ? ' w--current' : ''}`} aria-current={p.slug === current ? 'page' : undefined} aria-label={p.title}>
                   <Img media={p.listImage ?? p.cardImage} className="img_case" sizes="(max-width: 767px) 100vw, 526px" />
                 </Link>
                 <div className="w-layout-hflex flex_spac">

@@ -118,6 +118,8 @@ async function seedSettings() {
       nav: Array.from(d.querySelectorAll('.nav_linkwrap a')).map((a) => ({ label: text(a), href: a.getAttribute('href') ?? '/' })),
       social,
       siteName: 'Yunan',
+      // Until she writes her own, the hero intro doubles as the site-wide meta description.
+      defaultDescription: text(d.querySelector('.sec_hero .p_large')),
       favicon: await media(ASSET_ROOT + '6946e7953c57125b13a60fef_U-favicon.jpg'),
       appleTouchIcon: await media(ASSET_ROOT + '6946e7972363a9c2aa1d37ee_U-Webclip.jpg'),
     },

@@ -4,13 +4,18 @@ import type { Media } from '@/payload-types'
 
 type Meta = { title?: string | null; description?: string | null; image?: Media | number | null } | null | undefined
 
-/** Metadata from a document's SEO tab; anything missing falls back to the layout defaults. */
+/**
+ * Metadata from a document's SEO tab. Keys are only set when the document has a value,
+ * so anything missing inherits the site-wide defaults from the layout.
+ */
 export function seoMetadata(meta: Meta, fallbackTitle: string, canonical: string): Metadata {
+  const title = meta?.title || fallbackTitle
   const image = mediaUrl(meta?.image)
+  const description = meta?.description || undefined
   return {
-    title: meta?.title || fallbackTitle,
-    description: meta?.description || undefined,
+    title,
+    ...(description && { description }),
     alternates: { canonical },
-    openGraph: { title: meta?.title || fallbackTitle, description: meta?.description || undefined, url: canonical, images: image ? [image] : undefined },
+    openGraph: { title, url: canonical, ...(description && { description }), ...(image && { images: [image] }) },
   }
 }

@@ -1,5 +1,6 @@
 import type { Metadata } from 'next'
 import { notFound } from 'next/navigation'
+import { preload } from 'react-dom'
 import { Sections } from '@/components/Blocks'
 import { CaseStudies } from '@/components/Cards'
 import { BgVideo, Img, mediaUrl } from '@/components/Media'
@@ -28,6 +29,8 @@ export default async function ProjectPage({ params }: Props) {
   if (!project) notFound()
   const hero = project.hero
   const variant = hero?.variant && hero.variant !== 'default' ? ` ${hero.variant}` : ''
+  // The cover is a CSS background, which the browser's preload scanner cannot see.
+  if (hero?.kind === 'cover' && mediaUrl(hero.image)) preload(mediaUrl(hero.image)!, { as: 'image', fetchPriority: 'high' })
   return (
     <>
       {hero?.kind === 'cover' && mediaUrl(hero.image) && <section className={`sec_project${variant}`} style={{ backgroundImage: `url("${mediaUrl(hero.image)}")` }} />}
