@@ -3483,3 +3483,11 @@ label {
 /* Mobile menu, opened by the Nav component instead of webflow.js. */
 .w-nav-overlay[data-open] { display: block; }
 .w-nav-overlay [data-nav-menu-open] { display: flex; flex-direction: column; position: relative; }
+
+/* Webflow wrote these per-element (#w-node-…) in the export; the same layouts by class. */
+.w-layout-layout.stack { grid-template-rows: auto; grid-template-columns: 1fr 1fr; }
+.grid_2 > .grid_right { grid-area: 1 / 2 / 2 / 3; }
+@media screen and (max-width: 767px) {
+  .w-layout-layout.stack { grid-template-columns: 1fr; }
+  .grid_2 > .grid_right { grid-column: 1 / 2; }
+}

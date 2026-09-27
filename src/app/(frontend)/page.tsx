@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import { Fragment } from 'react'
 import { asDocs, CaseCard, WorkFolders } from '@/components/Cards'
 import { BgVideo, Img } from '@/components/Media'
 import { findAll, findGlobal } from '@/lib/payload'
@@ -81,7 +82,7 @@ export default async function HomePage() {
               <div className="w-layout-cell gap_xs">
                 <p className="subhead">SKILLS</p>
                 {(home.skills ?? []).map((s) => (
-                  <div key={s.id} className="w-layout-vflex gap_xs">
+                  <Fragment key={s.id}>
                     <div className="w-layout-hflex flex_skills">
                       <img src="/assets/6924abf1e391624479f3243c/6946fe21e59d9bc4ff5847a0_Ellipse_white.svg" loading="lazy" width={12} alt="" className="icon_circle_blue" />
                       <p className="p_100"><strong>{s.title}</strong></p>
@@ -89,7 +90,7 @@ export default async function HomePage() {
                     <div className="w-layout-hflex flex_skills">
                       <p>{s.text}</p>
                     </div>
-                  </div>
+                  </Fragment>
                 ))}
               </div>
             </div>

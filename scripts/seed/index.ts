@@ -1,6 +1,6 @@
 // One-off import of the Webflow static mirror (site/) into Payload.
 // Safe to rerun: media is matched by filename, documents by slug, globals are overwritten.
-import { readFileSync, existsSync } from 'node:fs'
+import { readFileSync, readdirSync, existsSync } from 'node:fs'
 import path from 'node:path'
 import { JSDOM } from 'jsdom'
 import { getPayload, type Payload } from 'payload'
@@ -19,6 +19,10 @@ const COVERS: Record<string, string> = {
   sudio: '695e29f2b52d1005c1a36558_3_1.webp',
 }
 const SLUG_FIX: Record<string, string> = { caplliaryflow: 'capillaryflow' }
+const MIME: Record<string, string> = {
+  '.avif': 'image/avif', '.webp': 'image/webp', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png',
+  '.gif': 'image/gif', '.svg': 'image/svg+xml', '.mp4': 'video/mp4', '.webm': 'video/webm', '.json': 'application/json',
+}
 const HOME_WEB = ['viking', 'tg0', 'privasea', 'lolo']
 const HOME_ART = ['sudio', 'freepower', 'yuhei', 'capillaryflow']
 
@@ -30,6 +34,28 @@ const has = (el: Element, c: string) => el.classList.contains(c)
 let payload: Payload
 let editorConfig: Awaited<ReturnType<typeof editorConfigFactory.default>>
 const mediaCache = new Map<string, number>()
+// Readable filename → every distinct Webflow asset that uses it (e.g. two different "ui.avif").
+const nameUsers = new Map<string, Set<string>>()
+
+const readable = (rel: string) => path.basename(rel).replace(/^[0-9a-f]{24}_/, '')
+
+/** Scan every page once so colliding readable names can be disambiguated on upload. */
+function indexAssetNames() {
+  const walk = (dir: string) => {
+    for (const entry of readdirSync(dir, { withFileTypes: true })) {
+      const p = path.join(dir, entry.name)
+      if (entry.isDirectory()) walk(p)
+      else if (entry.name.endsWith('.html')) {
+        for (const m of readFileSync(p, 'utf8').matchAll(/\/assets\/[0-9a-f]{24}\/[^"'\s,)&<>]+/g)) {
+          const rel = m[0].replace(/^\//, '')
+          const name = readable(rel)
+          nameUsers.set(name, (nameUsers.get(name) ?? new Set()).add(rel))
+        }
+      }
+    }
+  }
+  walk(SITE)
+}
 
 /** Upload a file from site/ once; later calls return the same media id. */
 async function media(src: string | null | undefined, alt = ''): Promise<number | undefined> {
@@ -38,12 +64,18 @@ async function media(src: string | null | undefined, alt = ''): Promise<number |
   if (mediaCache.has(rel)) return mediaCache.get(rel)!
   const file = path.join(SITE, rel)
   if (!existsSync(file)) { console.warn('missing asset', rel); return undefined }
-  // Webflow names are "<id>_<name>"; keep the readable part.
-  const filename = path.basename(rel).replace(/^[0-9a-f]{24}_/, '')
+  // Webflow names are "<id>_<name>"; keep the readable part, plus a short id when two assets share it.
+  let filename = readable(rel)
+  if ((nameUsers.get(filename)?.size ?? 0) > 1) {
+    const id = path.basename(rel).slice(0, 24)
+    filename = filename.replace(/(\.[^.]+)$/, `-${id.slice(-6)}$1`)
+  }
   const existing = await payload.find({ collection: 'media', where: { filename: { equals: filename } }, limit: 1, pagination: false })
   let id = existing.docs[0]?.id
   if (!id) {
-    const created = await payload.create({ collection: 'media', data: { alt }, filePath: file, overwriteExistingFiles: true })
+    const data = readFileSync(file)
+    // Explicit type: Payload's sniffing does not recognise Lottie JSON.
+    const created = await payload.create({ collection: 'media', data: { alt }, file: { data, name: filename, mimetype: MIME[path.extname(filename).toLowerCase()] ?? 'application/octet-stream', size: data.length } })
     id = created.id
     console.log('  media', filename)
   }
@@ -191,74 +223,99 @@ async function seedWorks() {
   }
 }
 
-const widthOf = (el: Element) => (cls(el).find((c) => /^img_(40|60|75|100)$/.test(c)) ?? 'img_100').slice(4)
+const widthOf = (el: Element) => (has(el, 'icon_64') ? 'icon' : (cls(el).find((c) => /^img_(40|60|75|100)$/.test(c)) ?? 'img_100').slice(4))
+const isLottie = (el: Element) => el.getAttribute('data-animation-type') === 'lottie'
+const children = (el: Element | null | undefined) => Array.from(el?.children ?? [])
 
-/** Translate one Webflow section's children into content blocks. */
-async function contentBlocks(section: Element) {
+/** An <img> or Lottie element, possibly wrapped in a flex box, → a visual slot. */
+async function visual(el: Element) {
+  const inner = el.matches('img') || isLottie(el) ? el : el.querySelector('img, [data-animation-type="lottie"]')
+  if (!inner) return { kind: 'image' }
+  if (isLottie(inner)) return { kind: 'lottie', lottie: await media(inner.getAttribute('data-src')), width: widthOf(inner) }
+  return { kind: 'image', image: await media(imgSrc(inner)), width: widthOf(inner) }
+}
+
+/** Translate a list of sibling Webflow elements into content blocks. */
+async function blocksFrom(els: Element[]): Promise<Record<string, unknown>[]> {
   const blocks: Record<string, unknown>[] = []
-  const consumed = new Set<Element>()
-  const walk = async (el: Element) => {
-    if (consumed.has(el)) return
-    // Intro: heading column + facts column.
-    if (has(el, 'grid_2') && el.querySelector('.h_project')) {
-      const [left, right] = Array.from(el.children)
-      const facts = right?.querySelector(':scope > p')
-      const mediaEl = right?.querySelector('img, .w-background-video, [data-animation-type="lottie"]')
-      let mediaData: Record<string, unknown> = { kind: 'none' }
-      if (mediaEl?.matches('img')) mediaData = { kind: 'image', image: await media(imgSrc(mediaEl)), width: widthOf(mediaEl) }
-      else if (mediaEl?.classList.contains('w-background-video')) mediaData = { kind: 'video', video: await video(mediaEl) }
-      else if (mediaEl) mediaData = { kind: 'lottie', lottie: await media(mediaEl.getAttribute('data-src')), width: widthOf(mediaEl) }
-      blocks.push({
-        blockType: 'intro',
-        heading: text(left.querySelector('.h_project')),
-        subtitle: text(left.querySelector('.subhead')) || undefined,
-        lightSubtitle: Boolean(left.querySelector('.subhead.light')),
-        facts: facts ? lexical(`<p>${facts.innerHTML}</p>`) : undefined,
-        media: mediaData,
-      })
-      consumed.add(el)
-      return
-    }
-    if (el.matches('.w-layout-grid') && !el.querySelector('p, h1, h2, h3')) {
-      const imgs = Array.from(el.querySelectorAll('img'))
-      const n = (cls(el).find((c) => /^grid_\d$/.test(c)) ?? 'grid_3').slice(5)
-      if (n === '2' && imgs.length === 2) blocks.push({ blockType: 'twoUp', left: await media(imgSrc(imgs[0])), right: await media(imgSrc(imgs[1])), gap: !has(el, 'gap_0') })
-      else {
-        const images = []
-        for (const img of imgs) images.push({ image: await media(imgSrc(img)) })
-        blocks.push({ blockType: 'grid', columns: ['3', '4', '8'].includes(n) ? n : '3', images })
+  for (const el of els) {
+    if (has(el, 'grid_2')) {
+      const kids = children(el)
+      const textual = el.querySelector('p, h1, h2, h3')
+      if (!textual && kids.length === 2) {
+        blocks.push({ blockType: 'twoUp', left: await visual(kids[0]), right: await visual(kids[1]), gap: !has(el, 'gap_0') })
+      } else if (kids.length === 1 && kids[0].matches('p')) {
+        blocks.push({ blockType: 'text', body: lexical(`<p>${kids[0].innerHTML}</p>`) })
+      } else {
+        // Two columns: heading / subtitle / image on the left, facts + media on the right.
+        const [left, right] = kids
+        const heading = left?.querySelector('h1, h2, h3')
+        const leftImg = left?.querySelector('img, [data-animation-type="lottie"]')
+        const rightIsMedia = right && (right.matches('img') || isLottie(right) || has(right, 'w-background-video'))
+        const facts = rightIsMedia ? null : right?.querySelector(':scope > p')
+        const mediaEl = rightIsMedia ? right : right?.querySelector('img, .w-background-video, [data-animation-type="lottie"]')
+        let mediaData: Record<string, unknown> = { kind: 'none' }
+        if (mediaEl?.matches('img')) mediaData = { kind: 'image', image: await media(imgSrc(mediaEl)), width: widthOf(mediaEl) }
+        else if (mediaEl && has(mediaEl, 'w-background-video')) mediaData = { kind: 'video', video: await video(mediaEl) }
+        else if (mediaEl) mediaData = { kind: 'lottie', lottie: await media(mediaEl.getAttribute('data-src')), width: widthOf(mediaEl) }
+        blocks.push({
+          blockType: 'columns',
+          heading: heading ? text(heading) : undefined,
+          headingSize: heading?.matches('h2') ? 'h2' : heading?.matches('h3') ? 'h3' : 'h1',
+          subtitle: text(left?.querySelector('.subhead')) || undefined,
+          lightSubtitle: Boolean(left?.querySelector('.subhead.light')),
+          leftImage: leftImg?.matches('img') ? await media(imgSrc(leftImg)) : undefined,
+          leftImageWidth: leftImg ? widthOf(leftImg) : '100',
+          facts: facts ? lexical(`<p>${facts.innerHTML}</p>`) : undefined,
+          centerRight: Boolean(right && has(right, 'aligne_center_center')),
+          media: mediaData,
+        })
       }
-      consumed.add(el)
-      return
-    }
-    if (el.matches('img')) {
+    } else if (el.matches('.w-layout-grid')) {
+      const images = []
+      for (const img of el.querySelectorAll('img')) images.push({ image: await media(imgSrc(img)) })
+      const n = (cls(el).find((c) => /^grid_\d$/.test(c)) ?? 'grid_3').slice(5)
+      blocks.push({ blockType: 'grid', columns: ['3', '4', '8'].includes(n) ? n : '3', images })
+    } else if (el.matches('img')) {
       blocks.push({ blockType: 'image', image: await media(imgSrc(el)), width: widthOf(el), multiply: has(el, 'img_multiply_blending') })
-      return
-    }
-    if (has(el, 'w-background-video')) {
+    } else if (has(el, 'w-background-video')) {
       blocks.push({ blockType: 'video', video: await video(el), size: has(el, 'video_300') ? '300' : 'full' })
-      return
+    } else if (isLottie(el)) {
+      blocks.push({ blockType: 'lottie', lottie: await media(el.getAttribute('data-src')), width: widthOf(el), loop: el.getAttribute('data-loop') === '1' })
+    } else if (el.matches('p')) {
+      blocks.push({ blockType: 'text', body: lexical(`<p>${el.innerHTML}</p>`) })
+    } else {
+      blocks.push(...(await blocksFrom(children(el))))
     }
-    if (el.getAttribute('data-animation-type') === 'lottie') {
-      blocks.push({ blockType: 'lottie', lottie: await media(el.getAttribute('data-src')), loop: el.getAttribute('data-loop') === '1' })
-      return
-    }
-    if (el.matches('h1, h2, h3, p')) {
-      const heading = el.matches('h1, h2, h3') ? el : null
-      const body = heading ? (heading.nextElementSibling?.matches('p') ? heading.nextElementSibling : null) : el
-      if (body) consumed.add(body)
-      blocks.push({
-        blockType: 'text',
-        heading: heading ? text(heading) : undefined,
-        headingSize: heading?.matches('h1') ? 'h1' : heading?.matches('h2') ? 'h2' : 'h3',
-        body: body ? lexical(`<p>${body.innerHTML}</p>`) : undefined,
-      })
-      return
-    }
-    for (const child of Array.from(el.children)) await walk(child)
   }
-  await walk(section)
   return blocks
+}
+
+/** A Webflow section → rows: one per `.wrap` (empty ones are spacers), loose elements grouped without padding. */
+async function sectionRows(section: Element) {
+  const rows: Record<string, unknown>[] = []
+  let loose: { els: Element[]; contained: boolean } | null = null
+  const flush = async () => {
+    if (loose) rows.push({ wrapper: 'none', contained: loose.contained, content: await blocksFrom(loose.els) })
+    loose = null
+  }
+  const visit = async (el: Element, contained: boolean) => {
+    if (has(el, 'contain')) {
+      await flush()
+      for (const child of children(el)) await visit(child, true)
+    } else if (has(el, 'wrap')) {
+      await flush()
+      const wrapper = has(el, 'aligne_center_center') ? (has(el, 'gap_m') ? 'center gap' : 'center') : has(el, 'w-layout-vflex') ? 'vflex' : 'wrap'
+      rows.push({ wrapper, contained, content: await blocksFrom(children(el)) })
+    } else {
+      if (loose && loose.contained !== contained) await flush()
+      loose ??= { els: [], contained }
+      loose.els.push(el)
+    }
+  }
+  for (const el of children(section)) await visit(el, false)
+  await flush()
+  return rows
 }
 
 async function seedProjects(): Promise<Record<string, number>> {
@@ -282,7 +339,7 @@ async function seedProjects(): Promise<Record<string, number>> {
       hero = { kind: 'cover', variant, image: await media(ASSET_ROOT + COVERS[variant], text(d.querySelector('.h_project'))) }
       sections.shift()
     } else if (first && has(first, 'sec_hero') && first.querySelector('img.img_75')) {
-      hero = { kind: 'image', image: await media(imgSrc(first.querySelector('img.img_75')), text(d.querySelector('.h_project'))) }
+      hero = { kind: 'image', variant: has(first, 'freepower') ? 'freepower' : 'default', image: await media(imgSrc(first.querySelector('img.img_75')), text(d.querySelector('.h_project'))) }
       sections.shift()
     } else if (first?.querySelector('.video_fullhero')) {
       hero = { kind: 'video', video: await video(first.querySelector('.video_fullhero')) }
@@ -291,15 +348,15 @@ async function seedProjects(): Promise<Record<string, number>> {
 
     const layout = []
     for (const s of sections) {
-      const content = await contentBlocks(s)
-      if (!content.length) continue
+      const rows = await sectionRows(s)
+      if (!rows.length) continue
       const c = cls(s)
       layout.push({
         blockType: 'section',
-        padding: c.includes('section_0pad') ? 'section_0pad' : c.includes('sec_hero') ? 'sec_hero' : 'section',
+        padding: c.includes('section_0pad') ? 'section_0pad' : c.includes('sec_hero') ? 'sec_hero' : c.includes('section') ? 'section' : 'none',
         background: c.includes('lolo_ui') && c.includes('white') ? 'lolo_ui white' : c.find((x) => ['grey', 'dark', 'bg_grid', 'bg_waterdrop', 'bg_chip', 'deepsea', 'lolo_ui'].includes(x)) ?? 'default',
-        contained: Boolean(s.querySelector('.contain')),
-        content,
+        contained: Boolean(s.querySelector(':scope > .contain')),
+        rows,
       })
     }
 
@@ -324,6 +381,7 @@ async function seedProjects(): Promise<Record<string, number>> {
 async function main() {
   payload = await getPayload({ config })
   editorConfig = await editorConfigFactory.default({ config: await config })
+  indexAssetNames()
   await seedSettings()
   await seedContact()
   await seedAbout()

@@ -1,11 +1,11 @@
 import type { Block, Field } from 'payload'
 import { imageField, lottieField, videoGroup } from '@/fields'
 
-// Content blocks stack inside a Section block. Class names mirror the Webflow CSS
-// so every existing case-study page can be rebuilt exactly.
+// Project pages are Sections → rows (a Webflow "wrap") → content blocks. Class names
+// mirror the Webflow CSS so every existing case-study page can be rebuilt exactly.
 
-const widthField: Field = {
-  name: 'width',
+const widthField = (name = 'width'): Field => ({
+  name,
   type: 'select',
   defaultValue: '100',
   options: [
@@ -13,25 +13,46 @@ const widthField: Field = {
     { label: '75%', value: '75' },
     { label: '60%', value: '60' },
     { label: '40%', value: '40' },
+    { label: 'Icon (64px)', value: 'icon' },
   ],
-}
+})
+
+/** An image or a Lottie animation, for slots that take either. */
+const visual = (name: string): Field => ({
+  name,
+  type: 'group',
+  fields: [
+    {
+      name: 'kind',
+      type: 'select',
+      defaultValue: 'image',
+      options: [
+        { label: 'Image', value: 'image' },
+        { label: 'Lottie', value: 'lottie' },
+      ],
+    },
+    imageField('image', { admin: { condition: (_, s) => s?.kind !== 'lottie' } }),
+    lottieField('lottie'),
+    widthField(),
+  ],
+})
 
 const Image: Block = {
   slug: 'image',
   fields: [
     imageField('image', { required: true }),
-    widthField,
+    widthField(),
     { name: 'multiply', type: 'checkbox', label: 'Multiply blend (for images on tinted backgrounds)' },
   ],
 }
 
 const TwoUp: Block = {
   slug: 'twoUp',
-  labels: { singular: 'Two images', plural: 'Two images' },
+  labels: { singular: 'Two visuals side by side', plural: 'Two visuals side by side' },
   fields: [
-    imageField('left', { required: true }),
-    imageField('right', { required: true }),
-    { name: 'gap', type: 'checkbox', label: 'Gap between images', defaultValue: true },
+    visual('left'),
+    visual('right'),
+    { name: 'gap', type: 'checkbox', label: 'Gap between the two', defaultValue: true },
   ],
 }
 
@@ -55,33 +76,41 @@ const Grid: Block = {
 
 const Text: Block = {
   slug: 'text',
-  fields: [
-    { name: 'heading', type: 'text' },
-    {
-      name: 'headingSize',
-      type: 'select',
-      defaultValue: 'h3',
-      options: [
-        { label: 'Project title (h1 style)', value: 'h1' },
-        { label: 'Large (h2)', value: 'h2' },
-        { label: 'Small (h3)', value: 'h3' },
-      ],
-    },
-    { name: 'body', type: 'richText' },
-  ],
+  labels: { singular: 'Paragraph (right column)', plural: 'Paragraphs' },
+  fields: [{ name: 'body', type: 'richText' }],
 }
 
-const Intro: Block = {
-  slug: 'intro',
-  labels: { singular: 'Intro (title + facts)', plural: 'Intros' },
+const Columns: Block = {
+  slug: 'columns',
+  labels: { singular: 'Two columns (title + facts)', plural: 'Two columns' },
+  admin: { group: 'Layout' },
   fields: [
-    { name: 'heading', type: 'text', required: true },
+    {
+      type: 'row',
+      fields: [
+        { name: 'heading', type: 'text' },
+        {
+          name: 'headingSize',
+          type: 'select',
+          defaultValue: 'h1',
+          options: [
+            { label: 'Project title', value: 'h1' },
+            { label: 'Large', value: 'h2' },
+            { label: 'Small', value: 'h3' },
+          ],
+        },
+      ],
+    },
     { name: 'subtitle', type: 'text' },
     { name: 'lightSubtitle', type: 'checkbox', label: 'Light subtitle (on dark backgrounds)' },
+    imageField('leftImage', { admin: { description: 'Image under the heading, or instead of it.' } }),
+    widthField('leftImageWidth'),
     { name: 'facts', type: 'richText', admin: { description: 'Scope / Role / Outcome. Bold the labels.' } },
+    { name: 'centerRight', type: 'checkbox', label: 'Center the right column', defaultValue: true },
     {
       name: 'media',
       type: 'group',
+      admin: { description: 'Under the text in the right column.' },
       fields: [
         {
           name: 'kind',
@@ -95,7 +124,7 @@ const Intro: Block = {
           ],
         },
         imageField('image', { admin: { condition: (_, s) => s?.kind === 'image' } }),
-        widthField,
+        widthField(),
         videoGroup('video', { admin: { condition: (_, s) => s?.kind === 'video' } }),
         lottieField('lottie'),
       ],
@@ -113,7 +142,7 @@ const Video: Block = {
       type: 'select',
       defaultValue: 'full',
       options: [
-        { label: 'Full-screen hero', value: 'full' },
+        { label: 'Full-screen', value: 'full' },
         { label: '300px strip', value: '300' },
       ],
     },
@@ -122,7 +151,7 @@ const Video: Block = {
 
 const Lottie: Block = {
   slug: 'lottie',
-  fields: [lottieField(), { name: 'loop', type: 'checkbox', defaultValue: false }],
+  fields: [lottieField(), widthField(), { name: 'loop', type: 'checkbox', defaultValue: false }],
 }
 
 export const Section: Block = {
@@ -155,15 +184,36 @@ export const Section: Block = {
             { label: 'Normal', value: 'section' },
             { label: 'None (full bleed)', value: 'section_0pad' },
             { label: 'Hero', value: 'sec_hero' },
+            { label: 'Bare', value: 'none' },
           ],
         },
-        { name: 'contained', type: 'checkbox', label: 'Contained width', defaultValue: true },
       ],
     },
     {
-      name: 'content',
-      type: 'blocks',
-      blocks: [Image, TwoUp, Grid, Text, Intro, Video, Lottie],
+      name: 'rows',
+      type: 'array',
+      admin: { description: 'Each row gets its own vertical spacing. A row without content is a spacer.' },
+      fields: [
+        {
+          type: 'row',
+          fields: [
+            {
+              name: 'wrapper',
+              type: 'select',
+              defaultValue: 'center',
+              options: [
+                { label: 'Padded, centered', value: 'center' },
+                { label: 'Padded, centered, extra gap', value: 'center gap' },
+                { label: 'Padded', value: 'wrap' },
+                { label: 'Padded, stacked left', value: 'vflex' },
+                { label: 'No padding', value: 'none' },
+              ],
+            },
+            { name: 'contained', type: 'checkbox', label: 'Contained width', defaultValue: true },
+          ],
+        },
+        { name: 'content', type: 'blocks', blocks: [Image, TwoUp, Grid, Text, Columns, Video, Lottie] },
+      ],
     },
   ],
 }

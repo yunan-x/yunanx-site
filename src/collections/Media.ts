@@ -10,7 +10,7 @@ export const Media: CollectionConfig = {
   access: { read: anyone, create: isAuthenticated, update: isAuthenticated, delete: isAuthenticated },
   upload: {
     focalPoint: true,
-    mimeTypes: ['image/*', 'video/mp4', 'video/webm', 'application/json'],
+    mimeTypes: ['image/*', 'video/*', 'application/json'],
     imageSizes: [
       { name: 'sm', width: 480, formatOptions: { format: 'webp' } },
       { name: 'md', width: 960, formatOptions: { format: 'webp' } },

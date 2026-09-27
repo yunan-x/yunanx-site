@@ -69,7 +69,7 @@ export function CaseStudies({ projects, current }: { projects: Project[]; curren
 }
 
 /** "Old & New Archive" folder list. */
-export function WorkFolders({ works, heading, marquee }: { works: Work[]; heading: string; marquee?: boolean }) {
+export function WorkFolders({ works, heading, marquee, small }: { works: Work[]; heading: string; marquee?: boolean; small?: boolean }) {
   return (
     <section className="section">
       <div className="contain">
@@ -80,6 +80,8 @@ export function WorkFolders({ works, heading, marquee }: { works: Work[]; headin
                 <h2 className="jubo">{heading}</h2>
                 <h2 className="jubo" aria-hidden="true">{heading}</h2>
               </>
+            ) : small ? (
+              <h3>{heading}</h3>
             ) : (
               <h2>{heading}</h2>
             )}

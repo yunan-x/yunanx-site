@@ -18,8 +18,8 @@ export function Img({ media, className, sizes, width, loading = 'lazy' }: { medi
       src={m.url}
       srcSet={srcSet}
       sizes={srcSet ? (sizes ?? '(max-width: 991px) 100vw, 1440px') : undefined}
-      width={width ?? m.width ?? undefined}
-      height={width && m.width && m.height ? Math.round((width / m.width) * m.height) : m.height ?? undefined}
+      // Width only, like the Webflow markup: the stylesheet caps widths with max-width and heights must stay auto.
+      width={width}
       alt={m.alt ?? ''}
       loading={loading}
       className={className}

@@ -234,9 +234,9 @@ export interface Project {
     kind?: ('cover' | 'image' | 'video' | 'none') | null;
     image?: (number | null) | Media;
     /**
-     * Cover crop and sizing preset from the original design.
+     * Crop and sizing preset from the original design.
      */
-    variant?: ('default' | 'tg0' | 'lolo' | 'privasea' | 'sudio') | null;
+    variant?: ('default' | 'tg0' | 'lolo' | 'privasea' | 'sudio' | 'freepower') | null;
     video?: {
       mp4?: (number | null) | Media;
       webm?: (number | null) | Media;
@@ -258,122 +258,156 @@ export interface Project {
               | 'lolo_ui white'
             )
           | null;
-        padding?: ('section' | 'section_0pad' | 'sec_hero') | null;
-        contained?: boolean | null;
-        content?:
-          | (
-              | {
-                  image: number | Media;
-                  width?: ('100' | '75' | '60' | '40') | null;
-                  multiply?: boolean | null;
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'image';
-                }
-              | {
-                  left: number | Media;
-                  right: number | Media;
-                  gap?: boolean | null;
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'twoUp';
-                }
-              | {
-                  columns?: ('3' | '4' | '8') | null;
-                  images?:
+        padding?: ('section' | 'section_0pad' | 'sec_hero' | 'none') | null;
+        /**
+         * Each row gets its own vertical spacing. A row without content is a spacer.
+         */
+        rows?:
+          | {
+              wrapper?: ('center' | 'center gap' | 'wrap' | 'vflex' | 'none') | null;
+              contained?: boolean | null;
+              content?:
+                | (
                     | {
                         image: number | Media;
+                        width?: ('100' | '75' | '60' | '40' | 'icon') | null;
+                        multiply?: boolean | null;
                         id?: string | null;
-                      }[]
-                    | null;
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'grid';
-                }
-              | {
-                  heading?: string | null;
-                  headingSize?: ('h1' | 'h2' | 'h3') | null;
-                  body?: {
-                    root: {
-                      type: string;
-                      children: {
-                        type: any;
-                        version: number;
-                        [k: string]: unknown;
-                      }[];
-                      direction: ('ltr' | 'rtl') | null;
-                      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-                      indent: number;
-                      version: number;
-                    };
-                    [k: string]: unknown;
-                  } | null;
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'text';
-                }
-              | {
-                  heading: string;
-                  subtitle?: string | null;
-                  lightSubtitle?: boolean | null;
-                  /**
-                   * Scope / Role / Outcome. Bold the labels.
-                   */
-                  facts?: {
-                    root: {
-                      type: string;
-                      children: {
-                        type: any;
-                        version: number;
-                        [k: string]: unknown;
-                      }[];
-                      direction: ('ltr' | 'rtl') | null;
-                      format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
-                      indent: number;
-                      version: number;
-                    };
-                    [k: string]: unknown;
-                  } | null;
-                  media?: {
-                    kind?: ('none' | 'image' | 'video' | 'lottie') | null;
-                    image?: (number | null) | Media;
-                    width?: ('100' | '75' | '60' | '40') | null;
-                    video?: {
-                      mp4?: (number | null) | Media;
-                      webm?: (number | null) | Media;
-                      poster?: (number | null) | Media;
-                    };
-                    /**
-                     * Lottie animation exported as JSON.
-                     */
-                    lottie?: (number | null) | Media;
-                  };
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'intro';
-                }
-              | {
-                  video?: {
-                    mp4?: (number | null) | Media;
-                    webm?: (number | null) | Media;
-                    poster?: (number | null) | Media;
-                  };
-                  size?: ('full' | '300') | null;
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'video';
-                }
-              | {
-                  /**
-                   * Lottie animation exported as JSON.
-                   */
-                  lottie?: (number | null) | Media;
-                  loop?: boolean | null;
-                  id?: string | null;
-                  blockName?: string | null;
-                  blockType: 'lottie';
-                }
-            )[]
+                        blockName?: string | null;
+                        blockType: 'image';
+                      }
+                    | {
+                        left?: {
+                          kind?: ('image' | 'lottie') | null;
+                          image?: (number | null) | Media;
+                          /**
+                           * Lottie animation exported as JSON.
+                           */
+                          lottie?: (number | null) | Media;
+                          width?: ('100' | '75' | '60' | '40' | 'icon') | null;
+                        };
+                        right?: {
+                          kind?: ('image' | 'lottie') | null;
+                          image?: (number | null) | Media;
+                          /**
+                           * Lottie animation exported as JSON.
+                           */
+                          lottie?: (number | null) | Media;
+                          width?: ('100' | '75' | '60' | '40' | 'icon') | null;
+                        };
+                        gap?: boolean | null;
+                        id?: string | null;
+                        blockName?: string | null;
+                        blockType: 'twoUp';
+                      }
+                    | {
+                        columns?: ('3' | '4' | '8') | null;
+                        images?:
+                          | {
+                              image: number | Media;
+                              id?: string | null;
+                            }[]
+                          | null;
+                        id?: string | null;
+                        blockName?: string | null;
+                        blockType: 'grid';
+                      }
+                    | {
+                        body?: {
+                          root: {
+                            type: string;
+                            children: {
+                              type: any;
+                              version: number;
+                              [k: string]: unknown;
+                            }[];
+                            direction: ('ltr' | 'rtl') | null;
+                            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                            indent: number;
+                            version: number;
+                          };
+                          [k: string]: unknown;
+                        } | null;
+                        id?: string | null;
+                        blockName?: string | null;
+                        blockType: 'text';
+                      }
+                    | {
+                        heading?: string | null;
+                        headingSize?: ('h1' | 'h2' | 'h3') | null;
+                        subtitle?: string | null;
+                        lightSubtitle?: boolean | null;
+                        /**
+                         * Image under the heading, or instead of it.
+                         */
+                        leftImage?: (number | null) | Media;
+                        leftImageWidth?: ('100' | '75' | '60' | '40' | 'icon') | null;
+                        /**
+                         * Scope / Role / Outcome. Bold the labels.
+                         */
+                        facts?: {
+                          root: {
+                            type: string;
+                            children: {
+                              type: any;
+                              version: number;
+                              [k: string]: unknown;
+                            }[];
+                            direction: ('ltr' | 'rtl') | null;
+                            format: 'left' | 'start' | 'center' | 'right' | 'end' | 'justify' | '';
+                            indent: number;
+                            version: number;
+                          };
+                          [k: string]: unknown;
+                        } | null;
+                        centerRight?: boolean | null;
+                        /**
+                         * Under the text in the right column.
+                         */
+                        media?: {
+                          kind?: ('none' | 'image' | 'video' | 'lottie') | null;
+                          image?: (number | null) | Media;
+                          width?: ('100' | '75' | '60' | '40' | 'icon') | null;
+                          video?: {
+                            mp4?: (number | null) | Media;
+                            webm?: (number | null) | Media;
+                            poster?: (number | null) | Media;
+                          };
+                          /**
+                           * Lottie animation exported as JSON.
+                           */
+                          lottie?: (number | null) | Media;
+                        };
+                        id?: string | null;
+                        blockName?: string | null;
+                        blockType: 'columns';
+                      }
+                    | {
+                        video?: {
+                          mp4?: (number | null) | Media;
+                          webm?: (number | null) | Media;
+                          poster?: (number | null) | Media;
+                        };
+                        size?: ('full' | '300') | null;
+                        id?: string | null;
+                        blockName?: string | null;
+                        blockType: 'video';
+                      }
+                    | {
+                        /**
+                         * Lottie animation exported as JSON.
+                         */
+                        lottie?: (number | null) | Media;
+                        width?: ('100' | '75' | '60' | '40' | 'icon') | null;
+                        loop?: boolean | null;
+                        id?: string | null;
+                        blockName?: string | null;
+                        blockType: 'lottie';
+                      }
+                  )[]
+                | null;
+              id?: string | null;
+            }[]
           | null;
         id?: string | null;
         blockName?: string | null;
@@ -695,63 +729,98 @@ export interface ProjectsSelect<T extends boolean = true> {
           | {
               background?: T;
               padding?: T;
-              contained?: T;
-              content?:
+              rows?:
                 | T
                 | {
-                    image?:
+                    wrapper?: T;
+                    contained?: T;
+                    content?:
                       | T
                       | {
-                          image?: T;
-                          width?: T;
-                          multiply?: T;
-                          id?: T;
-                          blockName?: T;
-                        };
-                    twoUp?:
-                      | T
-                      | {
-                          left?: T;
-                          right?: T;
-                          gap?: T;
-                          id?: T;
-                          blockName?: T;
-                        };
-                    grid?:
-                      | T
-                      | {
-                          columns?: T;
-                          images?:
+                          image?:
                             | T
                             | {
-                                image?: T;
-                                id?: T;
-                              };
-                          id?: T;
-                          blockName?: T;
-                        };
-                    text?:
-                      | T
-                      | {
-                          heading?: T;
-                          headingSize?: T;
-                          body?: T;
-                          id?: T;
-                          blockName?: T;
-                        };
-                    intro?:
-                      | T
-                      | {
-                          heading?: T;
-                          subtitle?: T;
-                          lightSubtitle?: T;
-                          facts?: T;
-                          media?:
-                            | T
-                            | {
-                                kind?: T;
                                 image?: T;
                                 width?: T;
+                                multiply?: T;
+                                id?: T;
+                                blockName?: T;
+                              };
+                          twoUp?:
+                            | T
+                            | {
+                                left?:
+                                  | T
+                                  | {
+                                      kind?: T;
+                                      image?: T;
+                                      lottie?: T;
+                                      width?: T;
+                                    };
+                                right?:
+                                  | T
+                                  | {
+                                      kind?: T;
+                                      image?: T;
+                                      lottie?: T;
+                                      width?: T;
+                                    };
+                                gap?: T;
+                                id?: T;
+                                blockName?: T;
+                              };
+                          grid?:
+                            | T
+                            | {
+                                columns?: T;
+                                images?:
+                                  | T
+                                  | {
+                                      image?: T;
+                                      id?: T;
+                                    };
+                                id?: T;
+                                blockName?: T;
+                              };
+                          text?:
+                            | T
+                            | {
+                                body?: T;
+                                id?: T;
+                                blockName?: T;
+                              };
+                          columns?:
+                            | T
+                            | {
+                                heading?: T;
+                                headingSize?: T;
+                                subtitle?: T;
+                                lightSubtitle?: T;
+                                leftImage?: T;
+                                leftImageWidth?: T;
+                                facts?: T;
+                                centerRight?: T;
+                                media?:
+                                  | T
+                                  | {
+                                      kind?: T;
+                                      image?: T;
+                                      width?: T;
+                                      video?:
+                                        | T
+                                        | {
+                                            mp4?: T;
+                                            webm?: T;
+                                            poster?: T;
+                                          };
+                                      lottie?: T;
+                                    };
+                                id?: T;
+                                blockName?: T;
+                              };
+                          video?:
+                            | T
+                            | {
                                 video?:
                                   | T
                                   | {
@@ -759,33 +828,21 @@ export interface ProjectsSelect<T extends boolean = true> {
                                       webm?: T;
                                       poster?: T;
                                     };
-                                lottie?: T;
+                                size?: T;
+                                id?: T;
+                                blockName?: T;
                               };
-                          id?: T;
-                          blockName?: T;
-                        };
-                    video?:
-                      | T
-                      | {
-                          video?:
+                          lottie?:
                             | T
                             | {
-                                mp4?: T;
-                                webm?: T;
-                                poster?: T;
+                                lottie?: T;
+                                width?: T;
+                                loop?: T;
+                                id?: T;
+                                blockName?: T;
                               };
-                          size?: T;
-                          id?: T;
-                          blockName?: T;
                         };
-                    lottie?:
-                      | T
-                      | {
-                          lottie?: T;
-                          loop?: T;
-                          id?: T;
-                          blockName?: T;
-                        };
+                    id?: T;
                   };
               id?: T;
               blockName?: T;

@@ -51,7 +51,7 @@ export default async function WorkItemPage({ params }: Props) {
           </div>
         </div>
       </section>
-      <WorkFolders works={all.filter((w) => w.slug !== slug)} heading="View more projects" />
+      <WorkFolders works={all.filter((w) => w.slug !== slug)} heading="View more projects" small />
     </>
   )
 }

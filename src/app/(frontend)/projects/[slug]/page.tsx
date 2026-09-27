@@ -27,16 +27,19 @@ export default async function ProjectPage({ params }: Props) {
   const [project, all] = await Promise.all([findBySlug('projects', slug, 3), findAll('projects')])
   if (!project) notFound()
   const hero = project.hero
+  const variant = hero?.variant && hero.variant !== 'default' ? ` ${hero.variant}` : ''
   return (
     <>
-      {hero?.kind === 'cover' && mediaUrl(hero.image) && (
-        <section className={`sec_project${hero.variant && hero.variant !== 'default' ? ` ${hero.variant}` : ''}`} style={{ backgroundImage: `url("${mediaUrl(hero.image)}")` }} />
-      )}
+      {hero?.kind === 'cover' && mediaUrl(hero.image) && <section className={`sec_project${variant}`} style={{ backgroundImage: `url("${mediaUrl(hero.image)}")` }} />}
       {hero?.kind === 'image' && (
-        <section className="sec_hero">
-          <div className="w-layout-vflex wrap aligne_center_center">
+        <section className={`sec_hero${variant}`}>
+          {hero.variant === 'freepower' ? (
             <Img media={hero.image} className="img_75" sizes="75vw" loading="eager" />
-          </div>
+          ) : (
+            <div className="w-layout-vflex wrap aligne_center_center">
+              <Img media={hero.image} className="img_75" sizes="75vw" loading="eager" />
+            </div>
+          )}
         </section>
       )}
       {hero?.kind === 'video' && (
