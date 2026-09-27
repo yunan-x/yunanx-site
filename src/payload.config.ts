@@ -1,4 +1,5 @@
 import { postgresAdapter } from '@payloadcms/db-postgres'
+import { resendAdapter } from '@payloadcms/email-resend'
 import { redirectsPlugin } from '@payloadcms/plugin-redirects'
 import { seoPlugin } from '@payloadcms/plugin-seo'
 import { lexicalEditor } from '@payloadcms/richtext-lexical'
@@ -28,7 +29,15 @@ if (blobToken && !blobEnabled) console.warn('BLOB_READ_WRITE_TOKEN is set but ma
 
 const routeBase = { works: '/work', projects: '/projects' } as const
 
+// Password-reset mail goes through Resend when RESEND_API_KEY is set; without it Payload
+// logs the mail to the console. Until yunanx.com is verified in Resend, only
+// onboarding@resend.dev can send, and only to the Resend account's own address.
+const email = process.env.RESEND_API_KEY
+  ? resendAdapter({ apiKey: process.env.RESEND_API_KEY, defaultFromAddress: process.env.EMAIL_FROM ?? 'onboarding@resend.dev', defaultFromName: 'Yunan CMS' })
+  : undefined
+
 export default buildConfig({
+  email,
   serverURL,
   admin: {
     user: Users.slug,
